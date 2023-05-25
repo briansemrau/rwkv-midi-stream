@@ -52,7 +52,7 @@ def play_midi(queue):
                 msg = queue.get()
                 delta = mido.tick2second(msg.time, 480, 500000)
                 if delta > 0:
-                    time_to_sleep = delta - (time.time() - last_time)
+                    time_to_sleep = delta - (time.time() - last_time) if last_time != 0 else delta
                     if time_to_sleep > 0:
                         time.sleep(time_to_sleep)
                     last_time = time.time()
