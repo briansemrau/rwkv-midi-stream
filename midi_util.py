@@ -441,10 +441,10 @@ def token_to_midi_message(utils: VocabUtils, token: str, state: DecodeState) -> 
             channel = utils.cfg.bin_channel_map[utils.cfg.bin_instrument_names[state.current_bin]]
             ticks = int(mido.second2tick(state.delta_accum / 1000.0, 480, 500000))
             state.delta_accum = 0.0
-            #if current_velocity > 0:
-            return mido.Message("note_on", note=state.current_note, velocity=current_velocity, time=ticks, channel=channel), state
-            #else:
-            #    track.append(mido.Message("note_off", note=current_note, velocity=0, time=ticks, channel=channel))
+            if current_velocity > 0:
+                return mido.Message("note_on", note=state.current_note, velocity=current_velocity, time=ticks, channel=channel), state
+            else:
+                return mido.Message("note_off", note=state.current_note, velocity=0, time=ticks, channel=channel), state
     else:
         if token[0] == "t" and token[1].isdigit():  # wait token
             state.delta_accum += utils.wait_token_to_delta(token)

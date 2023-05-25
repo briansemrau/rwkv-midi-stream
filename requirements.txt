@@ -1,6 +1,5 @@
 rwkv
---index-url https://download.pytorch.org/whl/cu117
-torch
+torch --index-url https://download.pytorch.org/whl/cu117
 ninja
 
 mido
