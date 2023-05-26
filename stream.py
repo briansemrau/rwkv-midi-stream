@@ -65,8 +65,8 @@ def play_midi(queue):
                     if time_to_sleep > 0:
                         time.sleep(time_to_sleep)
                     last_time = time.time()
-                    msg.time = 0
-                    midi_port.send(msg)
+                msg.time = 0
+                midi_port.send(msg)
             else:
                 time.sleep(0.1)
 
