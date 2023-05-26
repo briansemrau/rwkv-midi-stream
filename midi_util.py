@@ -420,11 +420,14 @@ class DecodeState:
     current_note: int
 
 
-def token_to_midi_message(utils: VocabUtils, token: str, state: DecodeState) -> Tuple[Optional[mido.Message], DecodeState]:
+def token_to_midi_message(utils: VocabUtils, token: str, state: DecodeState, end_token_pause: float = 3.0) -> Tuple[Optional[mido.Message], DecodeState]:
     if state is None:
         state = DecodeState(delta_accum=0.0, current_bin=utils.cfg._short_instrument_names_str_to_int[utils.cfg.short_instr_bin_names[0]], current_note=0)
     token = token.strip()
     if not token:
+        return None, state
+    if token == "<end>":
+        state.delta_accum += end_token_pause * 1000.0
         return None, state
     if token.startswith("<"):
         return None, state
