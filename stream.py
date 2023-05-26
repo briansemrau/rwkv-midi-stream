@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     # pump context playback
     for id in tokens:
-        note = tokenizer.decode([id])
+        note = tokenizer.decode([id], skip_special_tokens=False)
         callback(note)
 
     # sampling parameters
