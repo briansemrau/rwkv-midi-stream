@@ -36,6 +36,8 @@ def play_midi(queue):
 
     # get the midi output port
     with mido.open_output(device_name) as midi_port:
+        midi_port: mido.ports.BaseOutput
+        print("Opened midi port: ", midi_port.name)
         midi_port.reset()
         for i in range(128):
             midi_port.send(mido.Message('note_off', note=i))
@@ -54,7 +56,6 @@ def play_midi(queue):
 
         # now, in the main process, read from the fifo and play the notes
         last_time = time.time()
-        active_notes = {}  # {(channel, note): time}
         while True:
             if queue.qsize() > 0:
                 msg = queue.get()
@@ -64,27 +65,6 @@ def play_midi(queue):
                     if time_to_sleep > 0:
                         time.sleep(time_to_sleep)
                     last_time = time.time()
-
-                    # manage midi note state
-                    # turn off notes before repeating them
-                    if (msg.channel, msg.note) in active_notes:
-                        midi_port.send(mido.Message('note_off', channel=msg.channel, note=msg.note))
-                        del active_notes[(msg.channel, msg.note)]
-                    # keep track of active notes
-                    if msg.type == "note_on":
-                        active_notes[(msg.channel, msg.note)] = time.time()
-                    elif msg.type == "note_off":
-                        if (msg.channel, msg.note) in active_notes:
-                            del active_notes[(msg.channel, msg.note)]
-                    # turn off notes that the model may have forgotten to turn off
-                    notes_to_remove = []
-                    for (channel, note), t in active_notes.items():
-                        if last_time - t > 5.0:
-                            midi_port.send(mido.Message('note_off', channel=channel, note=note))
-                            notes_to_remove.append((channel, note))
-                    for note in notes_to_remove:
-                        del active_notes[note]
-                    
                     msg.time = 0
                     midi_port.send(msg)
             else:
@@ -124,9 +104,10 @@ if __name__ == '__main__':
     token_history = tokens.copy()
     def callback(note: str):
         global midi_state
-        msg, midi_state = token_to_midi_message(utils, note, midi_state, end_token_pause=3.0)
-        if msg is not None:
-            queue.put(msg)
+        for msg, new_state in token_to_midi_message(utils, note, midi_state, end_token_pause=3.0):
+            midi_state = new_state
+            if msg is not None:
+                queue.put(msg)
         print(note, end=' ')
 
     # pump context playback
