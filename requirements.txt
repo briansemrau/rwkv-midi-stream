@@ -6,7 +6,7 @@ mido
 
 # sudo apt-get install libasound-dev
 # sudo apt-get install libjack-dev
-python-rtmidi==1.4.*
+python-rtmidi
 
 # sudo apt-get install fluidsynth
 pyFluidSynth
