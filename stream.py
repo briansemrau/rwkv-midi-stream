@@ -136,16 +136,16 @@ if __name__ == '__main__':
         callback(note)
 
     # sampling parameters
-    temperature = 1.0
+    temperature = 0.5
     top_p = 0.8
     top_k = 0
-    repetition_penalty = 1.0  # standard LLM repetition penalty. 1.0 = no penalty
+    repetition_penalty = 1.1  # standard LLM repetition penalty. 1.0 = no penalty
     repetition_view_length = 256  # how far back to look for repetitions
     max_penalty = 1.5  # maximum penalty to apply. 1.0 = no penalty
     decay_factor = 0.99  # how much to decay the penalty by, depending on how far back. 1.0 = no decay
     supress_end = False
     # experimental params
-    initial_state_weighting = 0.001  # super experimental. I think this biases long generation towards initial context.
+    initial_state_weighting = 0.0008  # super experimental. I think this biases long generation towards initial context.
     weighting_period = 0  # phase in and out initial state weighting. mix of creativity and consistency.
 
     # fast forward through context
