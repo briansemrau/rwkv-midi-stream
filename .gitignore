@@ -162,3 +162,5 @@ cython_debug/
 performance*.txt
 *.pth
 *prompt.txt
+*.mid
+*.midi
