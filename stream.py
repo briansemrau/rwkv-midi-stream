@@ -107,6 +107,8 @@ if __name__ == '__main__':
 
     if ctx.endswith('.mid'):
         ctx = midi_util.convert_midi_to_str(cfg, mido.MidiFile(ctx))
+        splits = ctx.split(' ')
+        ctx = ' '.join(splits[:256])
 
     out_filename = f'performance_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.txt'
     out_file = open(out_filename, 'w')
