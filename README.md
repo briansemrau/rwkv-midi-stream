@@ -1,6 +1,8 @@
 # rwkv-midi-stream
 
-Currently a bit messy. Set up to run with my local configuration across WSL2 and Windows.
+Currently a bit messy. Things are set up to run with my local configuration on Windows.
+
+Intended for use with models you can find here: https://huggingface.co/brianflakes/rwkv-midi-piano
 
 ## Getting set up on windows
 

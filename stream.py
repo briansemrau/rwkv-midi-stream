@@ -143,6 +143,7 @@ if __name__ == '__main__':
     repetition_view_length = 256  # how far back to look for repetitions
     max_penalty = 1.5  # maximum penalty to apply. 1.0 = no penalty
     decay_factor = 0.99  # how much to decay the penalty by, depending on how far back. 1.0 = no decay
+    repetition_exclude_tokens = [tokenizer.encode(utils.format_wait_token(i+1)).ids[0] for i in range(cfg.wait_events)]
     supress_end = False
     # experimental params
     initial_state_weighting = 0.0008  # super experimental. I think this biases long generation towards initial context.
@@ -152,7 +153,7 @@ if __name__ == '__main__':
     initial_state = None
     ff_tokens = tokens[:-1] if len(tokens) > 1 else []
     ff_chunk_len = 256
-    while len(ff_tokens) > 1:
+    while len(ff_tokens) > 0:
         scores, state = model.forward(ff_tokens[:ff_chunk_len], state)
         # initial state is avg of whole context aa bb pp
         # initial_state = [
@@ -163,13 +164,13 @@ if __name__ == '__main__':
         # ] if initial_state != None else state.copy()
         ff_tokens = ff_tokens[ff_chunk_len:]
     tokens = tokens[-1:]
-    initial_state = state.copy()
+    initial_state = state.copy() if state != None else None
 
     tokens_generated = 0
     while True:
         if queue.qsize() < max_queue_size:
             scores, state = model.forward(tokens, state)
-            if initial_state_weighting > 0:
+            if initial_state_weighting > 0 and initial_state != None:
                 weight_factor = initial_state_weighting
                 if weighting_period != 0:
                     weight_factor *= max(0, math.cos((2.0 * math.pi) * (tokens_generated % weighting_period) / weighting_period) * 0.5 + 0.5)
@@ -195,6 +196,8 @@ if __name__ == '__main__':
                 decays = torch.pow(torch.full_like(repetition_context, decay_factor, dtype=scores.dtype), torch.arange(0, repetition_context.shape[-1], device=scores.device, dtype=scores.dtype)).flip(-1)
                 mask = torch.zeros_like(scores)
                 mask.scatter_add_(-1, repetition_context, decays)
+                exclude = torch.tensor(repetition_exclude_tokens, device=mask.device)
+                mask.scatter_(-1, exclude, torch.zeros_like(exclude, dtype=scores.dtype))
                 penalty_factor = torch.pow(torch.where(scores < 0, repetition_penalty, 1 / repetition_penalty), mask)
                 penalty_factor = torch.clamp(penalty_factor, torch.tensor(1.0 / max_penalty, device=penalty_factor.device), torch.tensor(max_penalty, device=penalty_factor.device))
                 scores = scores * penalty_factor
