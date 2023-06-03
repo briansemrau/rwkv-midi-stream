@@ -143,7 +143,7 @@ if __name__ == '__main__':
     repetition_view_length = 256  # how far back to look for repetitions
     max_penalty = 1.5  # maximum penalty to apply. 1.0 = no penalty
     decay_factor = 0.99  # how much to decay the penalty by, depending on how far back. 1.0 = no decay
-    repetition_exclude_tokens = [tokenizer.encode(utils.format_wait_token(i+1)).ids[0] for i in range(cfg.wait_events)]
+    repetition_ignore_ids = [tokenizer.token_to_id(utils.format_wait_token(i+1)) for i in range(cfg.wait_events)]  # ids to ignore when looking for repetitions
     supress_end = False
     # experimental params
     initial_state_weighting = 0.0008  # super experimental. I think this biases long generation towards initial context.
@@ -196,8 +196,7 @@ if __name__ == '__main__':
                 decays = torch.pow(torch.full_like(repetition_context, decay_factor, dtype=scores.dtype), torch.arange(0, repetition_context.shape[-1], device=scores.device, dtype=scores.dtype)).flip(-1)
                 mask = torch.zeros_like(scores)
                 mask.scatter_add_(-1, repetition_context, decays)
-                exclude = torch.tensor(repetition_exclude_tokens, device=mask.device)
-                mask.scatter_(-1, exclude, torch.zeros_like(exclude, dtype=scores.dtype))
+                mask[repetition_ignore_ids] = 0
                 penalty_factor = torch.pow(torch.where(scores < 0, repetition_penalty, 1 / repetition_penalty), mask)
                 penalty_factor = torch.clamp(penalty_factor, torch.tensor(1.0 / max_penalty, device=penalty_factor.device), torch.tensor(max_penalty, device=penalty_factor.device))
                 scores = scores * penalty_factor
